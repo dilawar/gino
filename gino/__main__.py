@@ -78,19 +78,19 @@ def run_once():
         try:
             sync_newly_created_issues_with_notion(project)
         except Exception as e:
-            logger.warning(e)
+            logger.error(e)
         try:
             sync_recently_closed_issues(project)
         except Exception as e:
-            logger.warning(e)
+            logger.error(e)
         try:
             mark_stale(project)
         except Exception as e:
-            logger.warning(e)
+            logger.error(e)
         try:
             close_issues(project)
         except Exception as e:
-            logger.warning(e)
+            logger.error(e)
 
 
 @app.command()
