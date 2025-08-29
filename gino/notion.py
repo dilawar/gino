@@ -118,10 +118,10 @@ def create_task(
         params["Due date"] = {"date": {"start": dd}}
 
     if assignee:
-        _assign_people_or_select("Assignee", assignee)
+        _assign_people_or_select("Assignee", assignee, params)
 
     if author:
-        _assign_people_or_select("Stakeholders", author)
+        _assign_people_or_select("Stakeholders", author, params)
 
     ## FIXME: appending blocks doesn't work
     ## page = []
@@ -151,7 +151,7 @@ def _assign_people_or_select(notion_field: str, people_id: str, params: dict):
         logging.info(f"Assigning {people_id} to {notion_field} as people...")
         params[notion_field] = {"people": [{"id": _find_notion_uuid(people_id)}]}
     except Exception as e:
-        logging.info(
+        logging.warning(
             f" Assignment failed {e}. Assigning {people_id} to {notion_field} as select..."
         )
         params[notion_field] = {"select": [{"id": _find_notion_uuid(people_id)}]}
