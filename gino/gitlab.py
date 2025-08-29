@@ -141,8 +141,8 @@ def sync_notes(project):
 
 
 def mark_issues_stale(project):
-    """Mark an issue stale if no activity on it for 4 weeks."""
-    updated_before = datetime.now(timezone.utc) - timedelta(days=28)
+    """Mark an issue stale if no activity on it for 12 weeks."""
+    updated_before = datetime.now(timezone.utc) - timedelta(days=7*12)
     stale = "stale"
     for issue in project.issues.list(
         state="opened",
