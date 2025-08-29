@@ -27,4 +27,7 @@ dependencies = [
 gino = "gino.__main__:app"
 
 [dependency-groups]
-dev = ["pytest>=8.2.0,<9"]
+dev = [
+    "pytest>=8.2.0,<9",
+    "ruff>=0.12.11",
+]

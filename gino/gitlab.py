@@ -89,7 +89,10 @@ def link_newly_created_issues_with_notion(project, created_before_mins: int = 72
             gino.notion.append_to_page(page["id"], text)
             issue.labels = issue.labels + [label]
             issue.notes.create(
-                dict(body="More information may be found at " + page["url"])
+                dict(
+                    body="This issue has been linked to Notion for backup/tracking/visualization purpose: "
+                    + page["url"]
+                )
             )
             issue.save()
 
