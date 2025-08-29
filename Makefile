@@ -14,8 +14,8 @@ lint check:
 	uv run pylint -E gino
 	uv run mypy $(MYPY_OPTS) --cache-dir=/tmp/ -m gino
 
-fix:
-	uv run black gino/*.py tests/*.py
+fix fmt:
+	uv run ruff format
 
 test: build 
 	uv install

@@ -142,7 +142,7 @@ def sync_notes(project):
 
 def mark_issues_stale(project):
     """Mark an issue stale if no activity on it for 12 weeks."""
-    updated_before = datetime.now(timezone.utc) - timedelta(days=7*12)
+    updated_before = datetime.now(timezone.utc) - timedelta(days=7 * 12)
     stale = "stale"
     for issue in project.issues.list(
         state="opened",
@@ -169,7 +169,7 @@ def change_notion_task_status(issue):
         return
     if not is_linked_with_notion(issue):
         logging.warning("> This issue was not found in notion")
-        return 
+        return
 
     notion_status = gl_issue_status_to_notion_task_status(issue)
     notion_page_uuid = find_notion_page_uuid(issue)
@@ -180,7 +180,7 @@ def change_notion_task_status(issue):
         issue.labels += [CLOSED_IN_NOTION]
         issue.save()
     else:
-        logging.warn("> Could not found notion page!") 
+        logging.warn("> Could not found notion page!")
 
 
 def close_issues_due_to_inactivity(project):

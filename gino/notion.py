@@ -44,7 +44,7 @@ def db_id():
     return os.environ["TASK_DATABASE_ID"]
 
 
-def _create_block(text, color="red"):
+def _create_block(text, color="red") -> dict:
     return dict(
         object="block",
         type="paragraph",
@@ -115,13 +115,13 @@ def create_task(
     if due_date:
         dd = dateparser.parse(due_date).strftime("%Y-%m-%dT%H:%M:%S") + ".000Z"
         logging.info(f"> due date {dd}")
-        params["Due"] = {"date": {"start": dd}}
+        params["Due date"] = {"date": {"start": dd}}
 
     if assignee:
-        params["Assign"] = {"people": [{"id": _find_notion_uuid(assignee)}]}
+        _assign_people_or_select("Assignee", assignee)
 
     if author:
-        params["Stakeholders"] = {"people": [{"id": _find_notion_uuid(author)}]}
+        _assign_people_or_select("Stakeholders", author)
 
     ## FIXME: appending blocks doesn't work
     ## page = []
@@ -140,6 +140,21 @@ def create_task(
     gino.common.store(shelve_key, 1)
 
     return page
+
+
+def _assign_people_or_select(notion_field: str, people_id: str, params: dict):
+    """
+    If we can find a notion person for people_id, assign people, else use
+    `select`
+    """
+    try:
+        logging.info(f"Assigning {people_id} to {notion_field} as people...")
+        params[notion_field] = {"people": [{"id": _find_notion_uuid(people_id)}]}
+    except Exception as e:
+        logging.info(
+            f" Assignment failed {e}. Assigning {people_id} to {notion_field} as select..."
+        )
+        params[notion_field] = {"select": [{"id": _find_notion_uuid(people_id)}]}
 
 
 def _find_notion_uuid(gitlab_user_or_email_or_uuid: str):
