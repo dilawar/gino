@@ -5,11 +5,11 @@ build-backend = "hatchling.build"
 [project]
 name = "gino"
 version = "0.3.2"
-description = "Gitlab <-> Notion"
-authors = [{ name = "Dilawar Singh", email = "dilawar@subcom.tech" }]
+description = "Gitlab Issues <-> Notion Task Database"
+authors = [{ name = "Dilawar Singh", email = "dilawar_s@zohomail.in" }]
 requires-python = ">=3.9, <4"
 readme = "README.md"
-license = "AGPL"
+license = "AGPL-3.0-or-later"
 dependencies = [
     "rich>=13.7.1,<14",
     "typer>=0.12.3,<0.13",
