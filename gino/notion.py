@@ -3,7 +3,6 @@ import difflib
 import uuid
 import typing as T
 import pprint
-import logging
 
 from datetime import timedelta
 
@@ -14,6 +13,7 @@ from validators.uuid import uuid as is_uuid
 from notion_client import Client
 
 import gino.common
+from gino.common import logger
 
 import typer
 
@@ -59,14 +59,14 @@ def get_page(_uuid):
     try:
         uid = str(uuid.UUID(_uuid))
     except Exception as e:
-        logging.warning(f"Failed to convert uuid {_uuid} to UUID. Error {e}.")
+        logger.warning(f"Failed to convert uuid {_uuid} to UUID. Error {e}.")
         return None
 
     if not is_uuid(uid):
-        logging.warning(f"Not a valid uuid: {uid}.")
+        logger.warning(f"Not a valid uuid: {uid}.")
         return None
     notion = client()
-    logging.info(f"Finding page with uuid={uid}")
+    logger.info(f"Finding page with uuid={uid}")
     return notion.pages.retrieve(uid)
 
 
@@ -76,7 +76,7 @@ def change_page_status(page_uuid, status: str):
     _uuid = str(uuid.UUID(page_uuid))
     assert is_uuid(_uuid), f"{_uuid} is not UUID."
     notion.pages.update(_uuid, properties=dict(Status=dict(status=dict(name=status))))
-    logging.info(f"Successfully updated status of `{_uuid}` to {status}")
+    logger.info(f"Successfully updated status of `{_uuid}` to {status}")
 
 
 def append_to_page(page_uuid, text):
@@ -85,7 +85,7 @@ def append_to_page(page_uuid, text):
     assert is_uuid(_uuid), f"{_uuid} is not UUID."
     children = [dict(paragraph=dict(rich_text=[dict(text=dict(content=text))]))]
     notion.blocks.children.append(block_id=_uuid, children=children)
-    logging.info(f"Successfully appended to page `{_uuid}`")
+    logger.info(f"Successfully appended to page `{_uuid}`")
 
 
 @app.command()
@@ -100,7 +100,7 @@ def create_task(
 ):
     shelve_key = f"{url}-{title}"
     if gino.common.load(shelve_key) is not None:
-        logging.debug("Page already exists in notion. Doing nothing")
+        logger.debug("Page already exists in notion. Doing nothing")
         return
 
     tags = [{"name": "FromGITLAB"}]
@@ -114,14 +114,14 @@ def create_task(
     }
     if due_date:
         dd = dateparser.parse(due_date).strftime("%Y-%m-%dT%H:%M:%S") + ".000Z"
-        logging.info(f"> due date {dd}")
+        logger.info(f"> due date {dd}")
         params["Due date"] = {"date": {"start": dd}}
 
     if assignee:
         _assign_people_or_select("Assignee", assignee, params)
 
-    if author:
-        _assign_people_or_select("Stakeholders", author, params)
+    # if author:
+    #     _assign_people_or_select("Stakeholders", author, params)
 
     ## FIXME: appending blocks doesn't work
     ## page = []
@@ -148,13 +148,13 @@ def _assign_people_or_select(notion_field: str, people_id: str, params: dict):
     `select`
     """
     try:
-        logging.info(f"Assigning {people_id} to {notion_field} as people...")
+        logger.info(f"Assigning {people_id} to {notion_field} as people...")
         params[notion_field] = {"people": [{"id": _find_notion_uuid(people_id)}]}
     except Exception as e:
-        logging.warning(
+        logger.warning(
             f" Assignment failed {e}. Assigning {people_id} to {notion_field} as select..."
         )
-        params[notion_field] = {"select": [{"id": _find_notion_uuid(people_id)}]}
+        params[notion_field] = {"multi_select": [{"name": people_id}]}
 
 
 def _find_notion_uuid(gitlab_user_or_email_or_uuid: str):
@@ -271,7 +271,7 @@ def sync_recently_added_blocks_page(page_uuid, page=None):
             issue = gino.gitlab.get_issue_by_url(issue_url)
             issue.notes.create(dict(body=f"_from:notion_: <{page_url}>" + markdown))
         except Exception as e:
-            logging.debug(e)
+            logger.debug(e)
 
 
 def sync_metrics(metrics):
@@ -289,10 +289,10 @@ def sync_metrics(metrics):
             unique_id = prop["UniqueId"]["rich_text"][0]["plain_text"]
             # check if unique_id is in metric server
             if (long_name_1 := metrics_dict.get(unique_id)) is not None:
-                logging.debug(_uuid, unique_id, long_name, long_name_1)
+                logger.debug(_uuid, unique_id, long_name, long_name_1)
                 if long_name_1 != long_name:
                     # update the value in notion.
-                    logging.info(f"Changing long name {long_name} to {long_name_1}")
+                    logger.info(f"Changing long name {long_name} to {long_name_1}")
                     notion.pages.update(
                         _uuid,
                         properties=dict(
@@ -305,13 +305,13 @@ def sync_metrics(metrics):
 
     # check if there are some metrics in metrics_dict that are not yet in
     # notion.
-    logging.info(f"These metrics are not in notion yet: {metrics_dict}")
+    logger.info(f"These metrics are not in notion yet: {metrics_dict}")
     for code, long_name in metrics_dict.items():
         _create_metric(notion, code, long_name)
 
 
 def _create_metric(notion, unique_id, long_name):
-    logging.info("Adding a new metrics to notion database")
+    logger.info("Adding a new metrics to notion database")
     notion.pages.create(
         parent=dict(type="database_id", database_id=NOTION_SECURITY_METRICS_DB),
         properties=dict(
