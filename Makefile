@@ -7,24 +7,21 @@ all : build
 build: wheel
 
 wheel: pyproject.toml 
-	poetry install
-	poetry build 
+	uv build 
 
 lint check:
-	poetry install 
-	poetry run ruff gino tests
-	poetry run pylint -E gino
-	poetry run mypy $(MYPY_OPTS) --cache-dir=/tmp/ -m gino
+	uv run ruff gino tests
+	uv run pylint -E gino
+	uv run mypy $(MYPY_OPTS) --cache-dir=/tmp/ -m gino
 
 fix:
-	poetry run black gino/*.py tests/*.py
+	uv run black gino/*.py tests/*.py
 
 test: build 
-	poetry install
-	poetry run pytest -s tests/*.py
+	uv install
+	uv run pytest -s tests/*.py
 
 run:
-	poetry install
-	poetry run gino run-once
+	uv run gino run-once
 
 ci: build test
